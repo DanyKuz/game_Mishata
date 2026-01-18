@@ -14,23 +14,20 @@ class MenuView(arcade.View):
     def __init__(self):
         super().__init__()
         self.current_state = MAIN_MENU
-        # Загружаем фон (как в твоём примере)
         self.background_texture = arcade.load_texture("data/background.png")
 
     def on_show_view(self):
-        pass  # фон теперь не цвет, а изображение
+        pass
 
     def on_draw(self):
         self.clear()
 
-        # Фон (оставляем как есть — он ок)
         arcade.draw_texture_rect(
             self.background_texture,
             arcade.rect.XYWH(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, SCREEN_WIDTH, SCREEN_HEIGHT)
         )
 
         if self.current_state == MAIN_MENU:
-            # Заголовок немного ниже
             arcade.draw_text("Мышата", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150,  # было -100 → стало -150
                             arcade.color.BLACK, font_size=48, anchor_x="center", bold=True)
             self.draw_menu_item("К уровням", 0)
@@ -68,18 +65,15 @@ class MenuView(arcade.View):
             self.draw_back_button()
 
     def draw_header(self, text):
-        # Было: SCREEN_HEIGHT - 80 → стало: SCREEN_HEIGHT - 120
         arcade.draw_text(text, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 120,
                         arcade.color.BLACK, font_size=36, anchor_x="center", bold=True)
 
     def draw_menu_item(self, text, index):
-        # Было: SCREEN_HEIGHT - 220 → стало: SCREEN_HEIGHT - 270 (на 50 пикс ниже)
         y = SCREEN_HEIGHT - 350 - index * 50
         arcade.draw_text(text, SCREEN_WIDTH // 2, y,
                         arcade.color.DARK_GRAY, font_size=24, anchor_x="center")
 
     def draw_multiline_text(self, text):
-        # Было: SCREEN_HEIGHT // 2 - 50 → стало: SCREEN_HEIGHT // 2 - 30 (чуть выше центра)
         arcade.draw_text(
             text,
             x=SCREEN_WIDTH // 2,
@@ -93,8 +87,7 @@ class MenuView(arcade.View):
         )
 
     def draw_back_button(self):
-        # Оставим как есть, но можно чуть опустить если нужно
-        arcade.draw_text("Назад", 80, 50, arcade.color.BLUE, font_size=18)  # было 60 → 50
+        arcade.draw_text("Назад", 80, 50, arcade.color.BLUE, font_size=18)
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         if self.current_state == MAIN_MENU:
             for i, _ in enumerate(["К уровням", "Правила", "Управление"]):
