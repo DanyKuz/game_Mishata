@@ -1,4 +1,6 @@
 import arcade
+import subprocess
+import sys
 
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 820
@@ -14,22 +16,27 @@ class MenuView(arcade.View):
     def __init__(self):
         super().__init__()
         self.current_state = MAIN_MENU
-        self.background_texture = arcade.load_texture("data/background.png")
+        try:
+            self.background_texture = arcade.load_texture("data/background.png")
+        except FileNotFoundError:
+            self.background_texture = None
+            print("Фон не найден. Используем чёрный фон.")
 
     def on_show_view(self):
-        pass
+        arcade.set_background_color(arcade.color.BLACK)
 
     def on_draw(self):
         self.clear()
 
-        arcade.draw_texture_rect(
-            self.background_texture,
-            arcade.rect.XYWH(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, SCREEN_WIDTH, SCREEN_HEIGHT)
-        )
+        if self.background_texture:
+            arcade.draw_texture_rect(
+                self.background_texture,
+                arcade.rect.XYWH(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, SCREEN_WIDTH, SCREEN_HEIGHT)
+            )
 
         if self.current_state == MAIN_MENU:
-            arcade.draw_text("Мышата", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150,  # было -100 → стало -150
-                            arcade.color.BLACK, font_size=48, anchor_x="center", bold=True)
+            arcade.draw_text("Мышата", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150,
+                            arcade.color.WHITE, font_size=48, anchor_x="center", bold=True)
             self.draw_menu_item("К уровням", 0)
             self.draw_menu_item("Правила", 1)
             self.draw_menu_item("Управление", 2)
@@ -57,28 +64,34 @@ class MenuView(arcade.View):
 
         elif self.current_state == LEVELS:
             self.draw_header("Выбор уровня")
-            self.draw_multiline_text(
+            '''self.draw_multiline_text(
                 "Уровень 1 — доступен \n"
                 "Уровень 2 — заблокирован \n"
                 "Уровень 3 — заблокирован "
-            )
+            )'''
+            arcade.draw_text("Уровень 1", SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 30,
+                            arcade.color.GREEN, font_size=22, anchor_x="center")
+            arcade.draw_text("Уровень 2", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30,
+                            arcade.color.RED, font_size=22, anchor_x="center")
+            arcade.draw_text("Уровень 3", SCREEN_WIDTH // 2 + 200, SCREEN_HEIGHT // 2 + 30,
+                            arcade.color.RED, font_size=22, anchor_x="center")
             self.draw_back_button()
 
     def draw_header(self, text):
         arcade.draw_text(text, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 120,
-                        arcade.color.BLACK, font_size=36, anchor_x="center", bold=True)
+                        arcade.color.WHITE, font_size=36, anchor_x="center", bold=True)
 
     def draw_menu_item(self, text, index):
         y = SCREEN_HEIGHT - 350 - index * 50
         arcade.draw_text(text, SCREEN_WIDTH // 2, y,
-                        arcade.color.DARK_GRAY, font_size=24, anchor_x="center")
+                        arcade.color.LIGHT_GRAY, font_size=24, anchor_x="center")
 
     def draw_multiline_text(self, text):
         arcade.draw_text(
             text,
             x=SCREEN_WIDTH // 2,
             y=SCREEN_HEIGHT // 2 + 100,
-            color=arcade.color.BLACK,
+            color=arcade.color.WHITE,
             font_size=18,
             anchor_x="center",
             width=600,
@@ -88,8 +101,16 @@ class MenuView(arcade.View):
 
     def draw_back_button(self):
         arcade.draw_text("Назад", 80, 50, arcade.color.BLUE, font_size=18)
+
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
-        if self.current_state == MAIN_MENU:
+        if self.current_state == LEVELS:
+            level1_y = SCREEN_HEIGHT // 2 + 30
+            if abs(x - SCREEN_WIDTH // 2 + 200) < 100 and abs(y - level1_y) < 20:
+                subprocess.Popen([sys.executable, "lvl1.py"])
+                return
+            if 20 <= x <= 140 and 40 <= y <= 80:
+                self.current_state = MAIN_MENU
+        elif self.current_state == MAIN_MENU:
             for i, _ in enumerate(["К уровням", "Правила", "Управление"]):
                 btn_y = SCREEN_HEIGHT - 340 - i * 50
                 if abs(x - SCREEN_WIDTH // 2) < 120 and abs(y - btn_y) < 20:
@@ -112,12 +133,12 @@ class MenuView(arcade.View):
 class GameWindow(arcade.Window):
     def __init__(self):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-        self.menu_view = MenuView()
-        self.show_view(self.menu_view)
 
 
 def main():
     window = GameWindow()
+    menu_view = MenuView()
+    window.show_view(menu_view)
     arcade.run()
 
 
