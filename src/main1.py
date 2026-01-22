@@ -106,7 +106,7 @@ class MenuView(arcade.View):
         if self.current_state == LEVELS:
             level1_y = SCREEN_HEIGHT // 2 + 30
             if abs(x - SCREEN_WIDTH // 2 + 200) < 100 and abs(y - level1_y) < 20:
-                subprocess.Popen([sys.executable, "lvl1.py"])
+                subprocess.Popen([sys.executable, "src/lvl1.py"])
                 return
             if 20 <= x <= 140 and 40 <= y <= 80:
                 self.current_state = MAIN_MENU
