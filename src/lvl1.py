@@ -1,18 +1,14 @@
 import arcade
-import random
 
-# Константы
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 820
 SCREEN_TITLE = "Уровень 1 — Мышата: Сбор монеток"
 PLAYER_SPEED = 5
 GRAVITY = 1.0
-JUMP_SPEED = 20
+JUMP_SPEED = 21
 
-# Масштабы спрайтов
 PLAYER_SCALING = 0.3
 COIN_SCALING = 0.3
-PLATFORM_SCALING = 0.5
 
 
 class MyGame(arcade.Window):
@@ -20,32 +16,38 @@ class MyGame(arcade.Window):
         super().__init__(width, height, title)
         arcade.set_background_color(arcade.color.SKY_BLUE)
 
-        # Списки спрайтов
         self.player_list = None
         self.coin_list = None
-        self.platform_list = None
+        self.collision_list = None
+        self.wall_list = None
+        self.death_list = None
 
-        # Игрок
         self.player = None
 
-        # Физический движок
         self.physics_engine = None
 
-        # Счёт
         self.score = 0
+        self.total_coins = 0
 
-        # Пауза / конец игры
         self.game_over = False
 
     def setup(self):
-        """Инициализация уровня с фиксированными платформами."""
+        """Инициализация уровня из Tiled-карты."""
         self.player_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
-        self.platform_list = arcade.SpriteList()
 
-        # === Игрок ===
+        map_name = "data/titlemap2/titlemap4.tmx"
+        tile_map = arcade.load_tilemap(map_name, scaling=0.5)
+
+        self.wall_list = tile_map.sprite_lists.get("Platform", arcade.SpriteList())
+        self.collision_list = self.wall_list
+        self.coin_list = tile_map.sprite_lists.get("Money", arcade.SpriteList())
+        self.death_list = tile_map.sprite_lists.get("Trap", arcade.SpriteList())
+
+        self.total_coins = len(self.coin_list)
+
         try:
-            self.player = arcade.Sprite("data/mouse.png", scale=0.1)
+            self.player = arcade.Sprite("data/mouse.png", scale=0.06)
             self.player.flip_horizontal = True
         except FileNotFoundError:
             print("Файл data/mouse.png не найден. Используем замену.")
@@ -56,62 +58,9 @@ class MyGame(arcade.Window):
         self.player.center_y = 200
         self.player_list.append(self.player)
 
-        # === Пол (фиксированный, без random) ===
-        for x in range(0, SCREEN_WIDTH + 1, 64):
-            platform = arcade.Sprite(":resources:images/tiles/grassMid.png", PLATFORM_SCALING)
-            platform.center_x = x
-            platform.center_y = 32
-            self.platform_list.append(platform)
-
-        # === Дополнительные платформы — строго по координатам ===
-        extra_platforms = [
-            (300, 200),
-            (500, 300),
-            (700, 250),
-            (900, 400),
-            (1100, 350),
-            (1300, 500),
-            (200, 450),   # можно добавить ещё
-            (800, 600),
-        ]
-
-        for x, y in extra_platforms:
-            try:
-                platform = arcade.Sprite("data/polka.png", scale=0.3)
-            except FileNotFoundError:
-                print("Файл data/polka.png не найден. Используем замену.")
-                platform = arcade.Sprite(":resources:images/tiles/grassHalf.png", PLATFORM_SCALING)
-            platform.center_x = x
-            platform.center_y = y
-            self.platform_list.append(platform)
-
-        # === Монетки — тоже можно сделать фиксированными, но пока оставим как есть или сделаем фиксированными ===
-        # Вариант 1: оставить случайные, но выше земли
-        # Вариант 2: задать вручную — покажу оба
-
-        # --- Вариант: фиксированные монетки (рекомендуется для контроля уровня) ---
-        coin_positions = [
-            (300, 250), (500, 350), (700, 300),
-            (900, 450), (1100, 400), (1300, 550),
-            (200, 550), (800, 650), (400, 150),
-            (600, 180), (1000, 220), (1200, 300),
-            (1400, 400), (1500, 100), (100, 300)
-        ]
-
-        for x, y in coin_positions:
-            try:
-                coin = arcade.Sprite("data/cheese.png", scale=0.05)
-            except FileNotFoundError:
-                print("Файл data/cheese.png не найден. Используем монетку.")
-                coin = arcade.Sprite(":resources:images/items/coinGold.png", COIN_SCALING)
-            coin.center_x = x
-            coin.center_y = y
-            self.coin_list.append(coin)
-
-        # === Физический движок ===
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
-            platforms=self.platform_list,
+            platforms=self.collision_list,
             gravity_constant=GRAVITY
         )
 
@@ -122,16 +71,17 @@ class MyGame(arcade.Window):
         """Отрисовка всего."""
         self.clear()
 
-        self.platform_list.draw()
+        self.wall_list.draw()
         self.coin_list.draw()
+        self.death_list.draw()
         self.player_list.draw()
 
-        arcade.draw_text(f"Сыр: {self.score}/15", 10, SCREEN_HEIGHT - 30,
+        arcade.draw_text(f"Сыр: {self.score}/{self.total_coins}", 10, SCREEN_HEIGHT - 30,
                          arcade.color.WHITE, 24, bold=True)
 
         if self.game_over:
             arcade.draw_text(
-                "Вы собрали все монетки!\nНажмите 'R' для перезапуска\nили 'Esc' для выхода",
+                "Вы собрали весь сыр!\nНажмите 'R' для перезапуска\nили 'Esc' для выхода",
                 SCREEN_WIDTH // 2,
                 SCREEN_HEIGHT // 2,
                 arcade.color.GREEN,
@@ -150,15 +100,18 @@ class MyGame(arcade.Window):
 
         self.physics_engine.update()
 
-        # Сбор монеток
         coin_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
         for coin in coin_hit_list:
             coin.remove_from_sprite_lists()
             self.score += 1
 
-        # Проверка победы
-        if self.score >= 15:
+        if self.score >= self.total_coins:
             self.game_over = True
+
+        death_hit_list = arcade.check_for_collision_with_list(self.player, self.death_list)
+        if death_hit_list:
+            # Перезапуск уровня при касании ловушки
+            self.setup()
 
     def on_key_press(self, key, modifiers):
         """Обработка нажатия клавиш."""
