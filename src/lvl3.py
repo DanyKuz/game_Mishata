@@ -7,8 +7,7 @@ PLAYER_SPEED = 5
 GRAVITY = 1.0
 JUMP_SPEED = 21
 
-# Масштабы
-PLAYER_SCALING = 0.06  # ваш кастомный масштаб для mouse.png
+PLAYER_SCALING = 0.06
 COIN_SCALING = 0.3
 
 
@@ -29,14 +28,14 @@ class MyGame(arcade.Window):
         self.total_coins = 0
         self.game_over = False
 
-        # Флаги движения
+
         self.left_pressed = False
         self.right_pressed = False
 
-        # Направление взгляда: True = влево, False = вправо
+
         self.facing_left = False
 
-        # Оригинальная текстура (вправо)
+
         self.player_texture_right = None
         self.player_texture_left = None
 
@@ -45,33 +44,33 @@ class MyGame(arcade.Window):
         self.player_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
 
-        map_name = "data/titlemap2/titlemap4.tmx"
+        map_name = "data/titlemap2/tilemap6.tmx"
         tile_map = arcade.load_tilemap(map_name, scaling=0.5)
 
         self.wall_list = tile_map.sprite_lists.get("Platform", arcade.SpriteList())
         self.coin_list = tile_map.sprite_lists.get("Money", arcade.SpriteList())
         self.death_list = tile_map.sprite_lists.get("Trap", arcade.SpriteList())
+        self.invise_list = tile_map.sprite_lists.get("Invise", arcade.SpriteList())
 
         self.total_coins = len(self.coin_list)
 
-        # Загружаем текстуру
         try:
             texture_right = arcade.load_texture("data/mouse.png")
         except FileNotFoundError:
             print("Файл data/mouse.png не найден. Используем замену.")
             texture_right = arcade.load_texture(":resources:images/animated_characters/female_person/femalePerson_idle.png")
-            # Уменьшаем масштаб, если нужно
+
             global PLAYER_SCALING
             PLAYER_SCALING = 0.3
 
-        # Создаём зеркальную текстуру
+
         texture_left = texture_right.flip_left_right()
 
         self.player_texture_right = texture_right
         self.player_texture_left = texture_left
 
         self.player = arcade.Sprite()
-        self.player.texture = self.player_texture_right  # начальное направление — вправо
+        self.player.texture = self.player_texture_right
         self.player.scale = PLAYER_SCALING
         self.player.center_x = 100
         self.player.center_y = 200
@@ -99,7 +98,7 @@ class MyGame(arcade.Window):
             if not self.facing_left:
                 self.player.texture = self.player_texture_left
                 self.facing_left = True
-        # Если обе или ни одна — не меняем направление
+
 
     def on_draw(self):
         """Отрисовка всего."""
@@ -109,6 +108,7 @@ class MyGame(arcade.Window):
         self.coin_list.draw()
         self.death_list.draw()
         self.player_list.draw()
+        self.invise_list.draw()
 
         arcade.draw_text(f"Сыр: {self.score}/{self.total_coins}", 10, SCREEN_HEIGHT - 30,
                          arcade.color.WHITE, 24, bold=True)
@@ -132,7 +132,7 @@ class MyGame(arcade.Window):
         if self.game_over:
             return
 
-        # Управление горизонтальной скоростью
+
         self.player.change_x = 0
         if self.left_pressed:
             self.player.change_x = -PLAYER_SPEED
@@ -142,24 +142,23 @@ class MyGame(arcade.Window):
         self.update_player_direction()
         self.physics_engine.update()
 
-        # Сбор монет
+
         coin_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
         for coin in coin_hit_list:
             coin.remove_from_sprite_lists()
             self.score += 1
 
-        # Внутри on_update, после сбора всех монет
+
         if self.score >= self.total_coins and not self.game_over:
             self.game_over = True
 
-            # === НОВОЕ: разблокируем уровень 2 ===
+
             import json
             import os
 
             PROGRESS_FILE = "progress.json"
             progress = {"level_1_unlocked": True, "level_2_unlocked": True, "level_3_unlocked": False}
             
-            # Если файл уже существует — обновляем только level_2
             if os.path.exists(PROGRESS_FILE):
                 try:
                     with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
@@ -170,9 +169,9 @@ class MyGame(arcade.Window):
 
             with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
                 json.dump(progress, f, indent=4)
-            # ======================================
 
-        # Смерть от ловушек
+
+
         death_hit_list = arcade.check_for_collision_with_list(self.player, self.death_list)
         if death_hit_list:
             self.setup()

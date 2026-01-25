@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="35" tilewidth="64" tileheight="64" infinite="0" nextlayerid="4" nextobjectid="1">
+ <tileset firstgid="1" source="polka (3).tsx"/>
+ <tileset firstgid="5" source="polka_rev.tsx"/>
+ <tileset firstgid="9" source="mousetrap.tsx"/>
+ <tileset firstgid="11" source="cheese.tsx"/>
+ <layer id="1" name="Platform" width="50" height="35">
+  <data encoding="base64" compression="zlib">
+   eJzt1UEKwCAMRFGr1fsfuXHhRhBUQmLlP5itRMlgCAAAAABg45FESZK8zrPgfm3fWtJi2FFgXe0d3QHmndCZ/r+s8Z5pRvYeQElROOOEPdK4h6XR/uzcw+L9+47+Nbf4AGQ4ANs=
+  </data>
+ </layer>
+ <layer id="3" name="Money" width="50" height="35">
+  <data encoding="base64" compression="zlib">
+   eJzt0zEKACAMA0B3//9fP6CIKNri3dolhKYUAAAguvo6AF+Z/dvuHeizHVgTbTPR8oxkyXmLPtac7kv/ZNQAEdAAeg==
+  </data>
+ </layer>
+ <layer id="2" name="Trap" width="50" height="35">
+  <data encoding="base64" compression="zlib">
+   eJzt1rEKACAIBUDX+v8PrjHCQajB4Q7kPRCcjQAAAIDc2DMf9gAA0NH5x2a9mve930k/C7lsAZA=
+  </data>
+ </layer>
+</map>

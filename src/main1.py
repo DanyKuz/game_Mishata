@@ -20,7 +20,7 @@ def save_progress(data):
 
 def load_progress():
     if not os.path.exists(PROGRESS_FILE):
-        # По умолчанию только уровень 1 доступен
+
         default = {
             "level_1_unlocked": True,
             "level_2_unlocked": False,
@@ -32,7 +32,7 @@ def load_progress():
         with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, KeyError):
-        # На случай повреждения файла
+
         default = {"level_1_unlocked": True, "level_2_unlocked": False, "level_3_unlocked": False}
         save_progress(default)
         return default
@@ -93,13 +93,10 @@ class MenuView(arcade.View):
         elif self.current_state == LEVELS:
             self.draw_header("Выбор уровня")
             
-            progress = load_progress()  # ← загружаем прогресс
+            progress = load_progress()
 
-            # Уровень 1 — всегда доступен
             color1 = arcade.color.GREEN
-            # Уровень 2
             color2 = arcade.color.GREEN if progress.get("level_2_unlocked", False) else arcade.color.RED
-            # Уровень 3
             color3 = arcade.color.GREEN if progress.get("level_3_unlocked", False) else arcade.color.RED
 
             arcade.draw_text("Уровень 1", SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 30,
@@ -140,24 +137,20 @@ class MenuView(arcade.View):
             progress = load_progress()
             level_y = SCREEN_HEIGHT // 2 + 30
 
-            # Уровень 1 (всегда активен)
             if abs(x - (SCREEN_WIDTH // 2 - 200)) < 100 and abs(y - level_y) < 20:
                 subprocess.Popen([sys.executable, "src/lvl1.py"])
                 return
 
-            # Уровень 2 (только если разблокирован)
             if (progress.get("level_2_unlocked", False) and
                 abs(x - (SCREEN_WIDTH // 2)) < 100 and abs(y - level_y) < 20):
                 subprocess.Popen([sys.executable, "src/lvl2.py"])
                 return
 
-            # Уровень 3 (позже)
             if (progress.get("level_3_unlocked", False) and
                 abs(x - (SCREEN_WIDTH // 2 + 200)) < 100 and abs(y - level_y) < 20):
                 subprocess.Popen([sys.executable, "src/lvl3.py"])
                 return
 
-            # Кнопка "Назад"
             if 20 <= x <= 140 and 40 <= y <= 80:
                 self.current_state = MAIN_MENU
         elif self.current_state == MAIN_MENU:

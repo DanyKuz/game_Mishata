@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "titlemap2.tmx",
+    "activeFile": "titlemap4.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -16,24 +16,48 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "polka (3) (1).tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "polka (3).tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
+        },
+        "polka_rev.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "tilemap5.tmx": {
+            "scale": 0.25,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1718,
+                "y": 1072
+            }
         },
         "titlemap2.tmx": {
             "scale": 0.125,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 2092,
-                "y": 1176
+                "x": 3200,
+                "y": 1592
             }
         },
         "titlemap3.tmx": {
             "scale": 0.125,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 2140,
-                "y": 272
+                "x": 2560,
+                "y": 1120
+            }
+        },
+        "titlemap4.tmx": {
+            "scale": 0.33,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2030.3030303030303,
+                "y": 657.5757575757575
             }
         }
     },
@@ -46,19 +70,23 @@
     "map.width": 50,
     "openFiles": [
         "titlemap2.tmx",
-        "polka (3).tsx",
         "cheese.tsx",
         "mousetrap.tsx",
-        "mousetrap.tsx",
-        "mousetrap.tsx",
-        "mousetrap.tsx"
+        "titlemap3.tmx",
+        "polka (3) (1).tsx",
+        "polka_rev.tsx",
+        "titlemap4.tmx"
     ],
     "project": "ttitlemap.tiled-project",
     "recentFiles": [
-        "polka (3).tsx",
-        "mousetrap.tsx",
+        "titlemap2.tmx",
         "cheese.tsx",
-        "titlemap2.tmx"
+        "mousetrap.tsx",
+        "titlemap3.tmx",
+        "polka (3) (1).tsx",
+        "polka_rev.tsx",
+        "titlemap4.tmx",
+        "polka (3).tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
