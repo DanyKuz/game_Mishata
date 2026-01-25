@@ -2,7 +2,7 @@ import arcade
 
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 820
-SCREEN_TITLE = "Уровень 1 — Мышата: Сбор монеток"
+SCREEN_TITLE = "Уровень 2 — Мышата: Сбор монеток"
 PLAYER_SPEED = 5
 GRAVITY = 1.0
 JUMP_SPEED = 21
@@ -166,7 +166,7 @@ class MyGame(arcade.Window):
                         progress = json.load(f)
                 except:
                     pass
-            progress["level_2_unlocked"] = True
+            progress["level_3_unlocked"] = True
 
             with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
                 json.dump(progress, f, indent=4)

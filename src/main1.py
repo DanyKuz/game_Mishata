@@ -1,6 +1,8 @@
 import arcade
 import subprocess
 import sys
+import json
+import os
 
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 820
@@ -10,6 +12,30 @@ MAIN_MENU = "main"
 RULES = "rules"
 CONTROLS = "controls"
 LEVELS = "levels"
+PROGRESS_FILE = "progress.json"
+
+def save_progress(data):
+    with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
+
+def load_progress():
+    if not os.path.exists(PROGRESS_FILE):
+        # По умолчанию только уровень 1 доступен
+        default = {
+            "level_1_unlocked": True,
+            "level_2_unlocked": False,
+            "level_3_unlocked": False
+        }
+        save_progress(default)
+        return default
+    try:
+        with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, KeyError):
+        # На случай повреждения файла
+        default = {"level_1_unlocked": True, "level_2_unlocked": False, "level_3_unlocked": False}
+        save_progress(default)
+        return default
 
 
 class MenuView(arcade.View):
@@ -21,6 +47,8 @@ class MenuView(arcade.View):
         except FileNotFoundError:
             self.background_texture = None
             print("Фон не найден. Используем чёрный фон.")
+
+    
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.BLACK)
@@ -64,17 +92,22 @@ class MenuView(arcade.View):
 
         elif self.current_state == LEVELS:
             self.draw_header("Выбор уровня")
-            '''self.draw_multiline_text(
-                "Уровень 1 — доступен \n"
-                "Уровень 2 — заблокирован \n"
-                "Уровень 3 — заблокирован "
-            )'''
+            
+            progress = load_progress()  # ← загружаем прогресс
+
+            # Уровень 1 — всегда доступен
+            color1 = arcade.color.GREEN
+            # Уровень 2
+            color2 = arcade.color.GREEN if progress.get("level_2_unlocked", False) else arcade.color.RED
+            # Уровень 3
+            color3 = arcade.color.GREEN if progress.get("level_3_unlocked", False) else arcade.color.RED
+
             arcade.draw_text("Уровень 1", SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 30,
-                            arcade.color.GREEN, font_size=22, anchor_x="center")
+                            color1, font_size=22, anchor_x="center")
             arcade.draw_text("Уровень 2", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30,
-                            arcade.color.RED, font_size=22, anchor_x="center")
+                            color2, font_size=22, anchor_x="center")
             arcade.draw_text("Уровень 3", SCREEN_WIDTH // 2 + 200, SCREEN_HEIGHT // 2 + 30,
-                            arcade.color.RED, font_size=22, anchor_x="center")
+                            color3, font_size=22, anchor_x="center")
             self.draw_back_button()
 
     def draw_header(self, text):
@@ -104,10 +137,27 @@ class MenuView(arcade.View):
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         if self.current_state == LEVELS:
-            level1_y = SCREEN_HEIGHT // 2 + 30
-            if abs(x - SCREEN_WIDTH // 2 + 200) < 100 and abs(y - level1_y) < 20:
+            progress = load_progress()
+            level_y = SCREEN_HEIGHT // 2 + 30
+
+            # Уровень 1 (всегда активен)
+            if abs(x - (SCREEN_WIDTH // 2 - 200)) < 100 and abs(y - level_y) < 20:
                 subprocess.Popen([sys.executable, "src/lvl1.py"])
                 return
+
+            # Уровень 2 (только если разблокирован)
+            if (progress.get("level_2_unlocked", False) and
+                abs(x - (SCREEN_WIDTH // 2)) < 100 and abs(y - level_y) < 20):
+                subprocess.Popen([sys.executable, "src/lvl2.py"])
+                return
+
+            # Уровень 3 (позже)
+            if (progress.get("level_3_unlocked", False) and
+                abs(x - (SCREEN_WIDTH // 2 + 200)) < 100 and abs(y - level_y) < 20):
+                subprocess.Popen([sys.executable, "src/lvl3.py"])
+                return
+
+            # Кнопка "Назад"
             if 20 <= x <= 140 and 40 <= y <= 80:
                 self.current_state = MAIN_MENU
         elif self.current_state == MAIN_MENU:

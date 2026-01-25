@@ -2,7 +2,7 @@ import arcade
 
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 820
-SCREEN_TITLE = "Уровень 1 — Мышата: Сбор монеток"
+SCREEN_TITLE = "Уровень 3 — Мышата: Сбор монеток"
 PLAYER_SPEED = 5
 GRAVITY = 1.0
 JUMP_SPEED = 21
