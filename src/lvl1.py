@@ -7,7 +7,8 @@ PLAYER_SPEED = 5
 GRAVITY = 1.0
 JUMP_SPEED = 21
 
-PLAYER_SCALING = 0.3
+# Масштабы
+PLAYER_SCALING = 0.06  # ваш кастомный масштаб для mouse.png
 COIN_SCALING = 0.3
 
 
@@ -18,18 +19,26 @@ class MyGame(arcade.Window):
 
         self.player_list = None
         self.coin_list = None
-        self.collision_list = None
         self.wall_list = None
         self.death_list = None
 
         self.player = None
-
         self.physics_engine = None
 
         self.score = 0
         self.total_coins = 0
-
         self.game_over = False
+
+        # Флаги движения
+        self.left_pressed = False
+        self.right_pressed = False
+
+        # Направление взгляда: True = влево, False = вправо
+        self.facing_left = False
+
+        # Оригинальная текстура (вправо)
+        self.player_texture_right = None
+        self.player_texture_left = None
 
     def setup(self):
         """Инициализация уровня из Tiled-карты."""
@@ -40,32 +49,57 @@ class MyGame(arcade.Window):
         tile_map = arcade.load_tilemap(map_name, scaling=0.5)
 
         self.wall_list = tile_map.sprite_lists.get("Platform", arcade.SpriteList())
-        self.collision_list = self.wall_list
         self.coin_list = tile_map.sprite_lists.get("Money", arcade.SpriteList())
         self.death_list = tile_map.sprite_lists.get("Trap", arcade.SpriteList())
 
         self.total_coins = len(self.coin_list)
 
+        # Загружаем текстуру
         try:
-            self.player = arcade.Sprite("data/mouse.png", scale=0.06)
-            self.player.flip_horizontal = True
+            texture_right = arcade.load_texture("data/mouse.png")
         except FileNotFoundError:
             print("Файл data/mouse.png не найден. Используем замену.")
-            self.player = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png", scale=PLAYER_SCALING)
-            self.player.texture = self.player.texture.flip_left_right()
+            texture_right = arcade.load_texture(":resources:images/animated_characters/female_person/femalePerson_idle.png")
+            # Уменьшаем масштаб, если нужно
+            global PLAYER_SCALING
+            PLAYER_SCALING = 0.3
 
+        # Создаём зеркальную текстуру
+        texture_left = texture_right.flip_left_right()
+
+        self.player_texture_right = texture_right
+        self.player_texture_left = texture_left
+
+        self.player = arcade.Sprite()
+        self.player.texture = self.player_texture_right  # начальное направление — вправо
+        self.player.scale = PLAYER_SCALING
         self.player.center_x = 100
         self.player.center_y = 200
         self.player_list.append(self.player)
 
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
-            platforms=self.collision_list,
+            platforms=self.wall_list,
             gravity_constant=GRAVITY
         )
 
         self.score = 0
         self.game_over = False
+        self.facing_left = False
+        self.left_pressed = False
+        self.right_pressed = False
+
+    def update_player_direction(self):
+        """Обновляет направление взгляда игрока."""
+        if self.right_pressed and not self.left_pressed:
+            if self.facing_left:
+                self.player.texture = self.player_texture_right
+                self.facing_left = False
+        elif self.left_pressed and not self.right_pressed:
+            if not self.facing_left:
+                self.player.texture = self.player_texture_left
+                self.facing_left = True
+        # Если обе или ни одна — не меняем направление
 
     def on_draw(self):
         """Отрисовка всего."""
@@ -98,8 +132,17 @@ class MyGame(arcade.Window):
         if self.game_over:
             return
 
+        # Управление горизонтальной скоростью
+        self.player.change_x = 0
+        if self.left_pressed:
+            self.player.change_x = -PLAYER_SPEED
+        if self.right_pressed:
+            self.player.change_x = PLAYER_SPEED
+
+        self.update_player_direction()
         self.physics_engine.update()
 
+        # Сбор монет
         coin_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
         for coin in coin_hit_list:
             coin.remove_from_sprite_lists()
@@ -108,13 +151,12 @@ class MyGame(arcade.Window):
         if self.score >= self.total_coins:
             self.game_over = True
 
+        # Смерть от ловушек
         death_hit_list = arcade.check_for_collision_with_list(self.player, self.death_list)
         if death_hit_list:
-            # Перезапуск уровня при касании ловушки
             self.setup()
 
     def on_key_press(self, key, modifiers):
-        """Обработка нажатия клавиш."""
         if self.game_over:
             if key == arcade.key.R:
                 self.setup()
@@ -123,17 +165,18 @@ class MyGame(arcade.Window):
             return
 
         if key == arcade.key.LEFT:
-            self.player.change_x = -PLAYER_SPEED
+            self.left_pressed = True
         elif key == arcade.key.RIGHT:
-            self.player.change_x = PLAYER_SPEED
+            self.right_pressed = True
         elif key == arcade.key.UP or key == arcade.key.SPACE:
             if self.physics_engine.can_jump():
                 self.player.change_y = JUMP_SPEED
 
     def on_key_release(self, key, modifiers):
-        """Обработка отпускания клавиш."""
-        if key in (arcade.key.LEFT, arcade.key.RIGHT):
-            self.player.change_x = 0
+        if key == arcade.key.LEFT:
+            self.left_pressed = False
+        elif key == arcade.key.RIGHT:
+            self.right_pressed = False
 
 
 def main():
