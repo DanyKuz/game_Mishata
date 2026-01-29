@@ -230,12 +230,23 @@ class MyGame(arcade.Window):
             self.right_pressed = True
         elif key == arcade.key.UP or key == arcade.key.SPACE:
             if self.physics_engine.can_jump():
+                self.player.change_y = JUMP_SPEED      
+        elif key == arcade.key.A:  
+            self.left_pressed = True
+        elif key == arcade.key.D:  
+            self.right_pressed = True
+        elif key == arcade.key.W:  
+            if self.physics_engine.can_jump():
                 self.player.change_y = JUMP_SPEED
 
     def on_key_release(self, key, modifiers):
         if key == arcade.key.LEFT:
             self.left_pressed = False
         elif key == arcade.key.RIGHT:
+            self.right_pressed = False
+        elif key == arcade.key.A:
+            self.left_pressed = False
+        elif key == arcade.key.D:
             self.right_pressed = False
 
 
