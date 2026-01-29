@@ -30,17 +30,17 @@
         },
         "tilemap5.tmx": {
             "scale": 0.25,
-            "selectedLayer": 1,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 1598,
+                "x": 1932,
                 "y": 1120
             }
         },
         "tilemap6.tmx": {
             "scale": 0.2814375,
-            "selectedLayer": 2,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 1600.710637352876,
+                "x": 1897.4017321785477,
                 "y": 1119.2538307794805
             }
         },
@@ -56,16 +56,16 @@
             "scale": 0.125,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 2556,
+                "x": 3224,
                 "y": 1120
             }
         },
         "titlemap4.tmx": {
-            "scale": 0.33,
-            "selectedLayer": 0,
+            "scale": 0.25,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 1601.5151515151515,
-                "y": 1121.2121212121212
+                "x": 1904,
+                "y": 756
             }
         }
     },

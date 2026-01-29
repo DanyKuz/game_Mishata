@@ -52,9 +52,14 @@ class MyGame(arcade.Window):
         tile_map = arcade.load_tilemap(map_name, scaling=0.5)
 
         self.wall_list = tile_map.sprite_lists.get("Platform", arcade.SpriteList())
+        self.wall2_list = tile_map.sprite_lists.get("wall", arcade.SpriteList())
         self.coin_list = tile_map.sprite_lists.get("Money", arcade.SpriteList())
         self.death_list = tile_map.sprite_lists.get("Trap", arcade.SpriteList())
         self.invise_list = tile_map.sprite_lists.get("Invise", arcade.SpriteList())
+
+        self.walls = []
+        self.walls.append(self.wall_list)
+        self.walls.append(self.wall2_list)
 
         self.total_coins = len(self.coin_list)
 
@@ -80,7 +85,7 @@ class MyGame(arcade.Window):
 
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
-            platforms=self.wall_list,
+            platforms=self.walls,
             gravity_constant=GRAVITY
         )
 
