@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "titlemap4.tmx",
+    "activeFile": "titlemap2.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -32,23 +32,31 @@
             "scale": 0.25,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 1718,
-                "y": 1072
+                "x": 1598,
+                "y": 1120
+            }
+        },
+        "tilemap6.tmx": {
+            "scale": 0.2814375,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 1600.710637352876,
+                "y": 1119.2538307794805
             }
         },
         "titlemap2.tmx": {
             "scale": 0.125,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 3200,
-                "y": 1592
+                "x": 2740,
+                "y": 2336
             }
         },
         "titlemap3.tmx": {
             "scale": 0.125,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 2560,
+                "x": 2556,
                 "y": 1120
             }
         },
@@ -56,8 +64,8 @@
             "scale": 0.33,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 2030.3030303030303,
-                "y": 657.5757575757575
+                "x": 1601.5151515151515,
+                "y": 1121.2121212121212
             }
         }
     },
@@ -75,17 +83,22 @@
         "titlemap3.tmx",
         "polka (3) (1).tsx",
         "polka_rev.tsx",
-        "titlemap4.tmx"
+        "titlemap4.tmx",
+        "tilemap5.tmx",
+        "tilemap6.tmx",
+        "cheese.tsx"
     ],
     "project": "ttitlemap.tiled-project",
     "recentFiles": [
-        "titlemap2.tmx",
         "cheese.tsx",
-        "mousetrap.tsx",
-        "titlemap3.tmx",
-        "polka (3) (1).tsx",
-        "polka_rev.tsx",
+        "tilemap6.tmx",
+        "tilemap5.tmx",
         "titlemap4.tmx",
+        "polka_rev.tsx",
+        "polka (3) (1).tsx",
+        "titlemap3.tmx",
+        "mousetrap.tsx",
+        "titlemap2.tmx",
         "polka (3).tsx"
     ],
     "tileset.lastUsedFormat": "tsx",

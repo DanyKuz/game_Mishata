@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="35" tilewidth="64" tileheight="64" infinite="0" nextlayerid="4" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="35" tilewidth="64" tileheight="64" infinite="0" nextlayerid="5" nextobjectid="1">
  <tileset firstgid="1" source="polka (3).tsx"/>
  <tileset firstgid="5" source="polka_rev.tsx"/>
  <tileset firstgid="9" source="mousetrap.tsx"/>
  <tileset firstgid="11" source="cheese.tsx"/>
+ <tileset firstgid="12" source="cat (1).tsx"/>
  <layer id="1" name="Platform" width="50" height="35">
   <data encoding="base64" compression="zlib">
    eJzt10sKgDAMRdFav/tfsQYcKXSQNngN70BGRcgdWGgpHNvXCwyiDhZ1sKiDRR0s6mBRR4y1cTZdU+9ZHmekDtvTuw+pw+zO79QRwzpqY+by/jcMscNDHTEydNi9m6HDqIPF23EM3aKft4NGHRw99y6NOljU4dd6J/xpsjgBpBcBpw==
+  </data>
+ </layer>
+ <layer id="4" name="Enemy" width="50" height="35">
+  <data encoding="base64" compression="zlib">
+   eJztzDENAAAIA7AJwL9eNCxcJK2AJgAAAAAAADfz9IbGAlzIABk=
   </data>
  </layer>
  <layer id="3" name="Money" width="50" height="35">
