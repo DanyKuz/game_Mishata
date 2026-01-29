@@ -1,4 +1,6 @@
 import arcade
+import json
+import os
 
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 820
@@ -20,6 +22,7 @@ class MyGame(arcade.Window):
         self.coin_list = None
         self.wall_list = None
         self.death_list = None
+        self.invise_list = None
 
         self.player = None
         self.physics_engine = None
@@ -28,17 +31,18 @@ class MyGame(arcade.Window):
         self.total_coins = 0
         self.game_over = False
 
-
         self.left_pressed = False
         self.right_pressed = False
 
-
         self.facing_left = False
-
 
         self.player_texture_right = None
         self.player_texture_left = None
 
+        self.game_time = 0.0  
+        self.timer_running = False
+        self.best_time = None
+        
     def setup(self):
         """Инициализация уровня из Tiled-карты."""
         self.player_list = arcade.SpriteList()
@@ -59,10 +63,8 @@ class MyGame(arcade.Window):
         except FileNotFoundError:
             print("Файл data/mouse.png не найден. Используем замену.")
             texture_right = arcade.load_texture(":resources:images/animated_characters/female_person/femalePerson_idle.png")
-
             global PLAYER_SCALING
             PLAYER_SCALING = 0.3
-
 
         texture_left = texture_right.flip_left_right()
 
@@ -87,6 +89,51 @@ class MyGame(arcade.Window):
         self.facing_left = False
         self.left_pressed = False
         self.right_pressed = False
+        
+        self.game_time = 0.0
+        self.timer_running = True
+
+        self.load_best_time()
+
+    def load_best_time(self):
+        """Загружает лучшее время из файла прогресса."""
+        PROGRESS_FILE = "progress.json"
+        self.best_time = None
+        if os.path.exists(PROGRESS_FILE):
+            try:
+                with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
+                    progress = json.load(f)
+                    self.best_time = progress.get("level_3_best_time")
+            except:
+                pass
+
+    def save_progress(self):
+        """Сохраняет прогресс и лучшее время."""
+        PROGRESS_FILE = "progress.json"
+        progress = {"level_1_unlocked": True, "level_2_unlocked": True, "level_3_unlocked": True}
+        
+        if os.path.exists(PROGRESS_FILE):
+            try:
+                with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
+                    progress = json.load(f)
+            except:
+                pass
+        
+        current_time = self.game_time
+        if "level_3_best_time" in progress:
+            if current_time < progress["level_3_best_time"]:
+                progress["level_3_best_time"] = current_time
+        else:
+            progress["level_3_best_time"] = current_time
+        
+        with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
+            json.dump(progress, f, indent=4, ensure_ascii=False)
+
+    def format_time(self, seconds):
+        """Форматирует время в формат ММ:СС.мс"""
+        minutes = int(seconds) // 60
+        seconds_remainder = seconds % 60
+        return f"{minutes:02d}:{seconds_remainder:05.2f}"
 
     def update_player_direction(self):
         """Обновляет направление взгляда игрока."""
@@ -98,7 +145,6 @@ class MyGame(arcade.Window):
             if not self.facing_left:
                 self.player.texture = self.player_texture_left
                 self.facing_left = True
-
 
     def on_draw(self):
         """Отрисовка всего."""
@@ -113,9 +159,21 @@ class MyGame(arcade.Window):
         arcade.draw_text(f"Сыр: {self.score}/{self.total_coins}", 10, SCREEN_HEIGHT - 30,
                          arcade.color.WHITE, 24, bold=True)
 
+        timer_text = f"Время: {self.format_time(self.game_time)}"
+        arcade.draw_text(timer_text, SCREEN_WIDTH - 450, SCREEN_HEIGHT - 30,
+                         arcade.color.WHITE, 24, bold=True)
+
+        if self.best_time is not None:
+            best_text = f"Рекорд: {self.format_time(self.best_time)}"
+            arcade.draw_text(best_text, SCREEN_WIDTH - 450, SCREEN_HEIGHT - 60,
+                             arcade.color.GOLD, 20, bold=True)
+            
         if self.game_over:
             arcade.draw_text(
-                "Вы собрали весь сыр!\nНажмите 'R' для перезапуска\nили 'Esc' для выхода",
+                "Вы собрали весь сыр!\n"
+                f"Время: {self.format_time(self.game_time)}\n"
+                f"Рекорд: {self.format_time(self.best_time) if self.best_time and self.game_time >= self.best_time else 'НОВЫЙ РЕКОРД!'}\n\n"
+                "Нажмите 'R' для перезапуска\nили 'Esc' для выхода",                SCREEN_WIDTH // 2,
                 SCREEN_WIDTH // 2,
                 SCREEN_HEIGHT // 2,
                 arcade.color.GREEN,
@@ -132,6 +190,8 @@ class MyGame(arcade.Window):
         if self.game_over:
             return
 
+        if self.timer_running:
+            self.game_time += delta_time
 
         self.player.change_x = 0
         if self.left_pressed:
@@ -142,42 +202,21 @@ class MyGame(arcade.Window):
         self.update_player_direction()
         self.physics_engine.update()
 
-
         coin_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
         for coin in coin_hit_list:
             coin.remove_from_sprite_lists()
             self.score += 1
 
-
         if self.score >= self.total_coins and not self.game_over:
             self.game_over = True
+            self.timer_running = False
 
-
-            import json
-            import os
-
-            PROGRESS_FILE = "progress.json"
-            progress = {"level_1_unlocked": True, "level_2_unlocked": True, "level_3_unlocked": False}
-            
-            if os.path.exists(PROGRESS_FILE):
-                try:
-                    with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
-                        progress = json.load(f)
-                except:
-                    pass
-            progress["level_2_unlocked"] = True
-
-            with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
-                json.dump(progress, f, indent=4)
-
-
+            self.save_progress()
 
         death_hit_list = arcade.check_for_collision_with_list(self.player, self.death_list)
         if death_hit_list:
             self.setup()
         
-
-
     def on_key_press(self, key, modifiers):
         if self.game_over:
             if key == arcade.key.R:
