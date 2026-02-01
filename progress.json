@@ -1,8 +1,8 @@
 {
     "level_1_unlocked": true,
-    "level_2_unlocked": true,
-    "level_3_unlocked": true,
-    "level_1_best_time": 8.9722819,
+    "level_2_unlocked": false,
+    "level_3_unlocked": false,
+    "level_1_best_time": 8.334187000000384,
     "level_3_best_time": 14.788843400000001,
     "level_2_best_time": 8.083743599999998
 }
