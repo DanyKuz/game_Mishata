@@ -11,6 +11,7 @@ JUMP_SPEED = 21
 
 PLAYER_SCALING = 0.06
 COIN_SCALING = 0.3
+PAUSE_SIGN_PATH = "data/pauseboard.png"
 
 
 class MyGame(arcade.Window):
@@ -30,21 +31,23 @@ class MyGame(arcade.Window):
         self.score = 0
         self.total_coins = 0
         self.game_over = False
+        self.paused = False
 
         self.left_pressed = False
         self.right_pressed = False
-
         self.facing_left = False
 
         self.player_texture_right = None
         self.player_texture_left = None
+
+        self.pause_sign_sprite = None
+        self.pause_sign_list = arcade.SpriteList()
 
         self.game_time = 0.0  
         self.timer_running = False
         self.best_time = None
         
     def setup(self):
-        """Инициализация уровня из Tiled-карты."""
         self.player_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
 
@@ -57,9 +60,7 @@ class MyGame(arcade.Window):
         self.death_list = tile_map.sprite_lists.get("Trap", arcade.SpriteList())
         self.invise_list = tile_map.sprite_lists.get("Invise", arcade.SpriteList())
 
-        self.walls = []
-        self.walls.append(self.wall_list)
-        self.walls.append(self.wall2_list)
+        self.walls = [self.wall_list, self.wall2_list]
 
         self.total_coins = len(self.coin_list)
 
@@ -89,8 +90,21 @@ class MyGame(arcade.Window):
             gravity_constant=GRAVITY
         )
 
+        self.pause_sign_list.clear()
+        try:
+            self.pause_sign_sprite = arcade.Sprite(PAUSE_SIGN_PATH)
+            self.pause_sign_sprite.center_x = SCREEN_WIDTH // 2
+            self.pause_sign_sprite.center_y = SCREEN_HEIGHT // 2
+            self.pause_sign_sprite.scale = 0.6
+            self.pause_sign_list.append(self.pause_sign_sprite)
+            print(f"Табличка паузы загружена: {PAUSE_SIGN_PATH}")
+        except Exception as e:
+            print(f"Не удалось загрузить табличку паузы: {e}")
+            self.pause_sign_sprite = None
+
         self.score = 0
         self.game_over = False
+        self.paused = False
         self.facing_left = False
         self.left_pressed = False
         self.right_pressed = False
@@ -101,7 +115,6 @@ class MyGame(arcade.Window):
         self.load_best_time()
 
     def load_best_time(self):
-        """Загружает лучшее время из файла прогресса."""
         PROGRESS_FILE = "progress.json"
         self.best_time = None
         if os.path.exists(PROGRESS_FILE):
@@ -113,7 +126,6 @@ class MyGame(arcade.Window):
                 pass
 
     def save_progress(self):
-        """Сохраняет прогресс и лучшее время."""
         PROGRESS_FILE = "progress.json"
         progress = {"level_1_unlocked": True, "level_2_unlocked": True, "level_3_unlocked": True}
         
@@ -135,13 +147,11 @@ class MyGame(arcade.Window):
             json.dump(progress, f, indent=4, ensure_ascii=False)
 
     def format_time(self, seconds):
-        """Форматирует время в формат ММ:СС.мс"""
         minutes = int(seconds) // 60
         seconds_remainder = seconds % 60
         return f"{minutes:02d}:{seconds_remainder:05.2f}"
 
     def update_player_direction(self):
-        """Обновляет направление взгляда игрока."""
         if self.right_pressed and not self.left_pressed:
             if self.facing_left:
                 self.player.texture = self.player_texture_right
@@ -152,7 +162,6 @@ class MyGame(arcade.Window):
                 self.facing_left = True
 
     def on_draw(self):
-        """Отрисовка всего."""
         self.clear()
 
         self.wall_list.draw()
@@ -173,12 +182,47 @@ class MyGame(arcade.Window):
             arcade.draw_text(best_text, SCREEN_WIDTH - 450, SCREEN_HEIGHT - 60,
                              arcade.color.GOLD, 20, bold=True)
             
+        if self.paused:
+            if self.pause_sign_sprite:
+                self.pause_sign_list.draw()
+                arcade.draw_text(
+                    "ПАУЗА\n\n\n"
+                    "Нажмите 'P' чтобы продолжить\n"
+                    "'R' для перезапуска\n"
+                    "'Esc' или 'Q' для выхода",
+                    SCREEN_WIDTH // 2,
+                    SCREEN_HEIGHT // 2 + 40,
+                    arcade.color.BLACK,
+                    24,
+                    anchor_x="center",
+                    anchor_y="center",
+                    align="center",
+                    multiline=True,
+                    width=500
+                )
+            else:
+                arcade.draw_text(
+                    "ПАУЗА\n\n"
+                    "Нажмите 'P' чтобы продолжить\n"
+                    "'R' для перезапуска\n"
+                    "'Esc' или 'Q' для выхода",
+                    SCREEN_WIDTH // 2,
+                    SCREEN_HEIGHT // 2,
+                    arcade.color.WHITE,
+                    36,
+                    anchor_x="center",
+                    anchor_y="center",
+                    align="center",
+                    multiline=True,
+                    width=600
+                )
+            
         if self.game_over:
             arcade.draw_text(
                 "Вы собрали весь сыр!\n"
                 f"Время: {self.format_time(self.game_time)}\n"
                 f"Рекорд: {self.format_time(self.best_time) if self.best_time and self.game_time >= self.best_time else 'НОВЫЙ РЕКОРД!'}\n\n"
-                "Нажмите 'R' для перезапуска\nили 'Esc' для выхода",                SCREEN_WIDTH // 2,
+                "Нажмите 'R' для перезапуска\nили 'Esc' для выхода",
                 SCREEN_WIDTH // 2,
                 SCREEN_HEIGHT // 2,
                 arcade.color.GREEN,
@@ -191,12 +235,14 @@ class MyGame(arcade.Window):
             )
 
     def on_update(self, delta_time):
-        """Логика обновления."""
         if self.game_over:
             return
 
-        if self.timer_running:
-            self.game_time += delta_time
+        if self.paused:
+            self.player.change_x = 0
+            return
+
+        self.game_time += delta_time
 
         self.player.change_x = 0
         if self.left_pressed:
@@ -215,7 +261,6 @@ class MyGame(arcade.Window):
         if self.score >= self.total_coins and not self.game_over:
             self.game_over = True
             self.timer_running = False
-
             self.save_progress()
 
         death_hit_list = arcade.check_for_collision_with_list(self.player, self.death_list)
@@ -223,7 +268,15 @@ class MyGame(arcade.Window):
             self.setup()
         
     def on_key_press(self, key, modifiers):
-        if self.game_over:
+        if key == arcade.key.P:
+            self.paused = not self.paused
+            if not self.paused:
+                self.left_pressed = False
+                self.right_pressed = False
+                self.player.change_x = 0
+            return
+
+        if self.paused or self.game_over:
             if key == arcade.key.R:
                 self.setup()
             elif key == arcade.key.ESCAPE or key == arcade.key.Q:
@@ -246,13 +299,9 @@ class MyGame(arcade.Window):
                 self.player.change_y = JUMP_SPEED
 
     def on_key_release(self, key, modifiers):
-        if key == arcade.key.LEFT:
+        if key == arcade.key.LEFT or key == arcade.key.A:
             self.left_pressed = False
-        elif key == arcade.key.RIGHT:
-            self.right_pressed = False
-        elif key == arcade.key.A:
-            self.left_pressed = False
-        elif key == arcade.key.D:
+        elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.right_pressed = False
 
 

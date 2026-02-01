@@ -8,11 +8,12 @@ SCREEN_TITLE = "Уровень 2 — Мышата: Сбор монеток"
 PLAYER_SPEED = 5
 GRAVITY = 1.0
 JUMP_SPEED = 21
-CAT_SPEED = 2  # Скорость кота
+CAT_SPEED = 2
 
 PLAYER_SCALING = 0.06
 COIN_SCALING = 0.3
-CAT_SCALING = 0.08  # Масштаб кота
+CAT_SCALING = 0.08
+PAUSE_SIGN_PATH = "data/pauseboard.png"
 
 
 class MyGame(arcade.Window):
@@ -24,7 +25,7 @@ class MyGame(arcade.Window):
         self.coin_list = None
         self.wall_list = None
         self.death_list = None
-        self.cat_list = None  # Список котов-врагов
+        self.cat_list = None
 
         self.player = None
         self.physics_engine = None
@@ -32,33 +33,33 @@ class MyGame(arcade.Window):
         self.score = 0
         self.total_coins = 0
         self.game_over = False
+        self.paused = False
 
         self.left_pressed = False
         self.right_pressed = False
-
         self.facing_left = False
 
         self.player_texture_right = None
         self.player_texture_left = None
         
-        # Для заморозки игрока
         self.is_frozen = False
         self.freeze_timer = 0.0
-        self.freeze_duration = 2.0  # 3 секунды заморозки
+        self.freeze_duration = 2.0
         
-        # Для кота
         self.cat_texture_right = None
         self.cat_texture_left = None
+
+        self.pause_sign_sprite = None
+        self.pause_sign_list = arcade.SpriteList()
 
         self.game_time = 0.0
         self.timer_running = False
         self.best_time = None 
 
     def setup(self):
-        """Инициализация уровня из Tiled-карты."""
         self.player_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
-        self.cat_list = arcade.SpriteList()  # Инициализация списка котов
+        self.cat_list = arcade.SpriteList()
 
         map_name = "data/titlemap2/titlemap4.tmx"
         tile_map = arcade.load_tilemap(map_name, scaling=0.5)
@@ -68,11 +69,8 @@ class MyGame(arcade.Window):
         self.coin_list = tile_map.sprite_lists.get("Money", arcade.SpriteList())
         self.death_list = tile_map.sprite_lists.get("Trap", arcade.SpriteList())
 
-        self.walls = []
-        self.walls.append(self.wall_list)
-        self.walls.append(self.wall2_list)
+        self.walls = [self.wall_list, self.wall2_list]
         
-        # Загружаем котов из слоя "Enemy" в Tiled
         enemy_layer = tile_map.sprite_lists.get("Enemy", arcade.SpriteList())
         for enemy_sprite in enemy_layer:
             try:
@@ -88,10 +86,9 @@ class MyGame(arcade.Window):
             cat.center_x = enemy_sprite.center_x
             cat.center_y = enemy_sprite.center_y
             
-            # Устанавливаем границы патрулирования (на 150 пикселей влево и вправо)
             cat.boundary_left = cat.center_x - 150
             cat.boundary_right = cat.center_x + 150
-            cat.change_x = CAT_SPEED  # Начальное направление движения
+            cat.change_x = CAT_SPEED
             
             cat.texture = self.cat_texture_left
             cat.facing_left = False
@@ -127,8 +124,21 @@ class MyGame(arcade.Window):
             gravity_constant=GRAVITY
         )
 
+        self.pause_sign_list.clear()
+        try:
+            self.pause_sign_sprite = arcade.Sprite(PAUSE_SIGN_PATH)
+            self.pause_sign_sprite.center_x = SCREEN_WIDTH // 2
+            self.pause_sign_sprite.center_y = SCREEN_HEIGHT // 2
+            self.pause_sign_sprite.scale = 0.6
+            self.pause_sign_list.append(self.pause_sign_sprite)
+            print(f"Табличка паузы загружена: {PAUSE_SIGN_PATH}")
+        except Exception as e:
+            print(f"Не удалось загрузить табличку паузы: {e}")
+            self.pause_sign_sprite = None
+
         self.score = 0
         self.game_over = False
+        self.paused = False
         self.facing_left = False
         self.left_pressed = False
         self.right_pressed = False
@@ -141,7 +151,6 @@ class MyGame(arcade.Window):
         self.load_best_time()
 
     def load_best_time(self):
-        """Загружает лучшее время из файла прогресса."""
         PROGRESS_FILE = "progress.json"
         self.best_time = None
         if os.path.exists(PROGRESS_FILE):
@@ -153,7 +162,6 @@ class MyGame(arcade.Window):
                 pass
 
     def save_progress(self):
-        """Сохраняет прогресс и лучшее время."""
         PROGRESS_FILE = "progress.json"
         progress = {"level_1_unlocked": True, "level_2_unlocked": True, "level_3_unlocked": False}
         
@@ -177,13 +185,11 @@ class MyGame(arcade.Window):
             json.dump(progress, f, indent=4, ensure_ascii=False)
 
     def format_time(self, seconds):
-        """Форматирует время в формат ММ:СС.мс"""
         minutes = int(seconds) // 60
         seconds_remainder = seconds % 60
         return f"{minutes:02d}:{seconds_remainder:05.2f}"
 
     def update_player_direction(self):
-        """Обновляет направление взгляда игрока."""
         if self.right_pressed and not self.left_pressed:
             if self.facing_left:
                 self.player.texture = self.player_texture_right
@@ -194,13 +200,12 @@ class MyGame(arcade.Window):
                 self.facing_left = True
 
     def on_draw(self):
-        """Отрисовка всего."""
         self.clear()
 
         self.wall_list.draw()
         self.coin_list.draw()
         self.death_list.draw()
-        self.cat_list.draw()  # Отрисовка котов
+        self.cat_list.draw()
         self.player_list.draw()
 
         arcade.draw_text(f"Сыр: {self.score}/{self.total_coins}", 10, SCREEN_HEIGHT - 30,
@@ -215,12 +220,46 @@ class MyGame(arcade.Window):
             arcade.draw_text(best_text, SCREEN_WIDTH - 450, SCREEN_HEIGHT - 60,
                              arcade.color.GOLD, 20, bold=True)
         
-        # Индикатор заморозки
         if self.is_frozen:
             remaining = max(0, self.freeze_duration - self.freeze_timer)
             arcade.draw_text(f"ЗАМОРОЗКА: {remaining:.1f}с", 
                            SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50,
                            arcade.color.BLUE, 36, bold=True, anchor_x="center")
+            
+        if self.paused:
+            if self.pause_sign_sprite:
+                self.pause_sign_list.draw()
+                arcade.draw_text(
+                    "ПАУЗА\n\n\n"
+                    "Нажмите 'P' чтобы продолжить\n"
+                    "'R' для перезапуска\n"
+                    "'Esc' или 'Q' для выхода",
+                    SCREEN_WIDTH // 2,
+                    SCREEN_HEIGHT // 2 + 40,
+                    arcade.color.BLACK,
+                    24,
+                    anchor_x="center",
+                    anchor_y="center",
+                    align="center",
+                    multiline=True,
+                    width=500
+                )
+            else:
+                arcade.draw_text(
+                    "ПАУЗА\n\n"
+                    "Нажмите 'P' чтобы продолжить\n"
+                    "'R' для перезапуска\n"
+                    "'Esc' или 'Q' для выхода",
+                    SCREEN_WIDTH // 2,
+                    SCREEN_HEIGHT // 2,
+                    arcade.color.WHITE,
+                    36,
+                    anchor_x="center",
+                    anchor_y="center",
+                    align="center",
+                    multiline=True,
+                    width=600
+                )
             
         if self.game_over:
             arcade.draw_text(
@@ -240,21 +279,21 @@ class MyGame(arcade.Window):
             )
 
     def on_update(self, delta_time):
-        """Логика обновления."""
         if self.game_over:
             return
 
-        if self.timer_running:
-            self.game_time += delta_time
+        if self.paused:
+            self.player.change_x = 0
+            return
 
-        # Обновление таймера заморозки
+        self.game_time += delta_time
+
         if self.is_frozen:
             self.freeze_timer += delta_time
             if self.freeze_timer >= self.freeze_duration:
                 self.is_frozen = False
                 self.freeze_timer = 0.0
 
-        # Движение игрока: учитываем клавиши ТОЛЬКО если НЕ заморожен
         if not self.is_frozen:
             self.player.change_x = 0
             if self.left_pressed:
@@ -263,15 +302,13 @@ class MyGame(arcade.Window):
                 self.player.change_x = PLAYER_SPEED
             self.update_player_direction()
         else:
-            self.player.change_x = 0  # Полная остановка при заморозке
+            self.player.change_x = 0
 
         self.physics_engine.update()
 
-        # Движение котов
         for cat in self.cat_list:
             cat.center_x += cat.change_x
             
-            # Поворот на границах
             if cat.boundary_left and cat.center_x <= cat.boundary_left:
                 cat.change_x = CAT_SPEED
                 cat.texture = self.cat_texture_left
@@ -281,44 +318,46 @@ class MyGame(arcade.Window):
                 cat.texture = self.cat_texture_right
                 cat.facing_left = True
 
-        # Столкновение с монетками
         coin_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
         for coin in coin_hit_list:
             coin.remove_from_sprite_lists()
             self.score += 1
 
-        # Проверка победы
         if self.score >= self.total_coins and not self.game_over:
             self.game_over = True
             self.timer_running = False
             self.save_progress()
 
-        # Смерть от ловушек
         death_hit_list = arcade.check_for_collision_with_list(self.player, self.death_list)
         if death_hit_list:
             self.setup()
             
-        # Столкновение с котом -> заморозка
         cat_hit_list = arcade.check_for_collision_with_list(self.player, self.cat_list)
         if cat_hit_list and not self.is_frozen:
             self.is_frozen = True
             self.freeze_timer = 0.0
-            self.player.change_x = 0  # Остановить движение сразу
-            # Небольшой отбрасывание назад для визуального эффекта
+            self.player.change_x = 0
             if cat_hit_list[0].facing_left:
                 self.player.center_x += 30
             else:
                 self.player.center_x -= 30
 
     def on_key_press(self, key, modifiers):
-        if self.game_over:
+        if key == arcade.key.P:
+            self.paused = not self.paused
+            if not self.paused:
+                self.left_pressed = False
+                self.right_pressed = False
+                self.player.change_x = 0
+            return
+
+        if self.paused or self.game_over:
             if key == arcade.key.R:
                 self.setup()
             elif key == arcade.key.ESCAPE or key == arcade.key.Q:
                 arcade.close_window()
             return
 
-        # ВСЕГДА обновляем состояние клавиш (даже во время заморозки!)
         if key == arcade.key.LEFT or key == arcade.key.A:
             self.left_pressed = True
         elif key == arcade.key.RIGHT or key == arcade.key.D:
@@ -328,7 +367,6 @@ class MyGame(arcade.Window):
                 self.player.change_y = JUMP_SPEED
 
     def on_key_release(self, key, modifiers):
-        # ВСЕГДА обновляем состояние клавиш (даже во время заморозки!)
         if key == arcade.key.LEFT or key == arcade.key.A:
             self.left_pressed = False
         elif key == arcade.key.RIGHT or key == arcade.key.D:
