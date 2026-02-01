@@ -14,6 +14,7 @@ PLAYER_SCALING = 0.06
 COIN_SCALING = 0.3
 CAT_SCALING = 0.08
 PAUSE_SIGN_PATH = "data/pauseboard.png"
+PAUSE_BUTTON_PATH = "data/pause.png" 
 MUSIC_VOLUME = 0.3
 
 
@@ -52,6 +53,9 @@ class MyGame(arcade.Window):
 
         self.pause_sign_sprite = None
         self.pause_sign_list = arcade.SpriteList()
+        
+        self.pause_button_sprite = None
+        self.pause_button_list = arcade.SpriteList()
 
         self.game_time = 0.0
         self.timer_running = False
@@ -156,6 +160,18 @@ class MyGame(arcade.Window):
             print(f"Не удалось загрузить табличку паузы: {e}")
             self.pause_sign_sprite = None
 
+        self.pause_button_list.clear()
+        try:
+            self.pause_button_sprite = arcade.Sprite(PAUSE_BUTTON_PATH, scale=0.04)
+            self.pause_button_sprite.center_x = SCREEN_WIDTH // 2
+            self.pause_button_sprite.center_y = SCREEN_HEIGHT - 50  # Сверху, с отступом
+            self.pause_button_list.append(self.pause_button_sprite)
+            print(f"Иконка паузы загружена: {PAUSE_BUTTON_PATH}")
+        except Exception as e:
+            print(f"Не удалось загрузить иконку паузы: {e}")
+            self.pause_button_sprite = None
+
+
         self.score = 0
         self.game_over = False
         self.paused = False
@@ -246,6 +262,9 @@ class MyGame(arcade.Window):
                            SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50,
                            arcade.color.BLUE, 36, bold=True, anchor_x="center")
             
+        if self.pause_button_sprite:
+            self.pause_button_list.draw()            
+
         if self.paused:
             if self.pause_sign_sprite:
                 self.pause_sign_list.draw()
@@ -391,6 +410,16 @@ class MyGame(arcade.Window):
             self.left_pressed = False
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.right_pressed = False
+            
+    def on_mouse_press(self, x, y, button, modifiers):
+        if not self.game_over and self.pause_button_sprite:
+            if self.pause_button_sprite.collides_with_point((x, y)):
+                self.paused = not self.paused
+                if not self.paused:
+                    self.left_pressed = False
+                    self.right_pressed = False
+                    self.player.change_x = 0
+                print(f"Пауза {'включена' if self.paused else 'выключена'} через иконку")
 
     def close(self):
         if self.music_player and self.music:
