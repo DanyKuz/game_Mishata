@@ -12,6 +12,7 @@ JUMP_SPEED = 21
 PLAYER_SCALING = 0.06
 COIN_SCALING = 0.3
 PAUSE_SIGN_PATH = "data/pauseboard.png"
+MUSIC_VOLUME = 0.3
 
 
 class MyGame(arcade.Window):
@@ -46,6 +47,25 @@ class MyGame(arcade.Window):
         self.game_time = 0.0  
         self.timer_running = False
         self.best_time = None
+        
+        self.music = None
+        self.music_player = None
+        
+        self.load_and_play_music()
+        
+    def load_and_play_music(self):
+        music_path = "data/music.wav"
+        if os.path.exists(music_path):
+            try:
+                self.music = arcade.Sound(music_path)
+                self.music_player = self.music.play(volume=MUSIC_VOLUME, loop=True)
+                print("Музыка загружена и запущена.")
+            except Exception as e:
+                print(f"Ошибка при загрузке музыки: {e}")
+                self.music = None
+                self.music_player = None
+        else:
+            print(f"Файл музыки '{music_path}' не найден. Игра будет без фоновой музыки.")
         
     def setup(self):
         self.player_list = arcade.SpriteList()
@@ -304,6 +324,11 @@ class MyGame(arcade.Window):
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.right_pressed = False
 
+    def close(self):
+        if self.music_player and self.music:
+            self.music.stop(self.music_player)
+        super().close()
+        
 
 def main():
     game = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
