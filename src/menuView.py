@@ -1,15 +1,47 @@
 import arcade
 import subprocess
 import sys
-from lvl1 import MyGame
+import json
+import os
 
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 820
+SCREEN_TITLE = "Мышата"
 
 MAIN_MENU = "main"
 RULES = "rules"
 CONTROLS = "controls"
 LEVELS = "levels"
+PROGRESS_FILE = "progress.json"
+
+
+def save_progress(data):
+    with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
+
+
+def load_progress():
+    if not os.path.exists(PROGRESS_FILE):
+        default = {
+            "level_1_unlocked": True,
+            "level_2_unlocked": False,
+            "level_3_unlocked": False
+        }
+        save_progress(default)
+        return default
+    try:
+        with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, KeyError):
+        default = {"level_1_unlocked": True, "level_2_unlocked": False, "level_3_unlocked": False}
+        save_progress(default)
+        return default
+
+
+class GameWindow(arcade.Window):
+    def __init__(self):
+        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+
 
 class MenuView(arcade.View):
     def __init__(self):
@@ -34,7 +66,7 @@ class MenuView(arcade.View):
             )
 
         if self.current_state == MAIN_MENU:
-            arcade.draw_text("Мышата", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150,
+            arcade.draw_text("Мышата", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 300,
                             arcade.color.WHITE, font_size=48, anchor_x="center", bold=True)
             self.draw_menu_item("К уровням", 0)
             self.draw_menu_item("Правила", 1)
@@ -46,7 +78,7 @@ class MenuView(arcade.View):
                 "Цель игры — собрать весь сыр на уровне.\n\n"
                 "Опасности:\n"
                 "• Кошка — замораживает  на 2 секунды\n"
-                "• Мышеловка — игра начинаеться заново\n"
+                "• Мышеловка — игрок умирает\n"
                 "• Стены — непроходимы\n\n"
                 "Пройдите уровень быстрее, чем раньше!"
             )
@@ -63,20 +95,27 @@ class MenuView(arcade.View):
 
         elif self.current_state == LEVELS:
             self.draw_header("Выбор уровня")
+            
+            progress = load_progress()
+
+            color1 = arcade.color.GREEN
+            color2 = arcade.color.GREEN if progress.get("level_2_unlocked", False) else arcade.color.RED
+            color3 = arcade.color.GREEN if progress.get("level_3_unlocked", False) else arcade.color.RED
+
             arcade.draw_text("Уровень 1", SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 30,
-                            arcade.color.GREEN, font_size=22, anchor_x="center")
+                            color1, font_size=22, anchor_x="center")
             arcade.draw_text("Уровень 2", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30,
-                            arcade.color.RED, font_size=22, anchor_x="center")
+                            color2, font_size=22, anchor_x="center")
             arcade.draw_text("Уровень 3", SCREEN_WIDTH // 2 + 200, SCREEN_HEIGHT // 2 + 30,
-                            arcade.color.RED, font_size=22, anchor_x="center")
+                            color3, font_size=22, anchor_x="center")
             self.draw_back_button()
 
     def draw_header(self, text):
-        arcade.draw_text(text, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 120,
+        arcade.draw_text(text, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 300,
                         arcade.color.WHITE, font_size=36, anchor_x="center", bold=True)
 
     def draw_menu_item(self, text, index):
-        y = SCREEN_HEIGHT - 350 - index * 50
+        y = SCREEN_HEIGHT - 380 - index * 50
         arcade.draw_text(text, SCREEN_WIDTH // 2, y,
                         arcade.color.LIGHT_GRAY, font_size=24, anchor_x="center")
 
@@ -84,7 +123,7 @@ class MenuView(arcade.View):
         arcade.draw_text(
             text,
             x=SCREEN_WIDTH // 2,
-            y=SCREEN_HEIGHT // 2 + 100,
+            y=SCREEN_HEIGHT // 2 + 65,
             color=arcade.color.WHITE,
             font_size=18,
             anchor_x="center",
@@ -94,19 +133,32 @@ class MenuView(arcade.View):
         )
 
     def draw_back_button(self):
-        arcade.draw_text("Назад", 80, 50, arcade.color.BLUE, font_size=18)
+        arcade.draw_text("Назад", 430, 275, arcade.color.BLUE, font_size=18)
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         if self.current_state == LEVELS:
-            level1_y = SCREEN_HEIGHT // 2 + 30
-            if abs(x - SCREEN_WIDTH // 2 + 200) < 100 and abs(y - level1_y) < 20:
+            progress = load_progress()
+            level_y = SCREEN_HEIGHT // 2 + 30
+
+            if abs(x - (SCREEN_WIDTH // 2 - 200)) < 100 and abs(y - level_y) < 20:
                 subprocess.Popen([sys.executable, "src/lvl1.py"])
                 return
-            if 20 <= x <= 140 and 40 <= y <= 80:
+
+            if (progress.get("level_2_unlocked", False) and
+                abs(x - (SCREEN_WIDTH // 2)) < 100 and abs(y - level_y) < 20):
+                subprocess.Popen([sys.executable, "src/lvl2.py"])
+                return
+
+            if (progress.get("level_3_unlocked", False) and
+                abs(x - (SCREEN_WIDTH // 2 + 200)) < 100 and abs(y - level_y) < 20):
+                subprocess.Popen([sys.executable, "src/lvl3.py"])
+                return
+
+            if 400 <= x <= 500 and 200 <= y <= 300:
                 self.current_state = MAIN_MENU
         elif self.current_state == MAIN_MENU:
             for i, _ in enumerate(["К уровням", "Правила", "Управление"]):
-                btn_y = SCREEN_HEIGHT - 340 - i * 50
+                btn_y = SCREEN_HEIGHT - 360 - i * 50
                 if abs(x - SCREEN_WIDTH // 2) < 120 and abs(y - btn_y) < 20:
                     if i == 0:
                         self.current_state = LEVELS
@@ -116,7 +168,7 @@ class MenuView(arcade.View):
                         self.current_state = CONTROLS
                     return
         else:
-            if 20 <= x <= 140 and 40 <= y <= 80:
+            if 400 <= x <= 500 and 200 <= y <= 300:
                 self.current_state = MAIN_MENU
 
     def on_key_press(self, symbol, modifiers):

@@ -1,6 +1,5 @@
 import arcade
-from gameWindow import GameWindow
-from menuView import MenuView
+from menuView import GameWindow, MenuView
 
 
 def main():
