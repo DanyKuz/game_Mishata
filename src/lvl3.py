@@ -183,10 +183,6 @@ class MyGame(arcade.Window):
         self.player.change_y = 0
         self.player.visible = True
         self.mouse_exploding = False
-        
-        for emitter in self.explosion_emitters:
-            emitter.close()
-        self.explosion_emitters.clear()
 
     def load_best_time(self):
         PROGRESS_FILE = "progress.json"
@@ -272,7 +268,6 @@ class MyGame(arcade.Window):
         self.explosion_start_time = self.game_time
         self.player.visible = False  
         
-
         emitters = self.make_mouse_explosion(self.player.center_x, self.player.center_y)
         self.explosion_emitters.extend(emitters)
 
@@ -288,7 +283,7 @@ class MyGame(arcade.Window):
         for emitter in self.explosion_emitters:
             emitter.draw()
             
-        if not self.mouse_exploding:
+        if self.player.visible:
             self.player_list.draw()
 
         arcade.draw_text(f"Сыр: {self.score}/{self.total_coins}", 10, SCREEN_HEIGHT - 30,
@@ -379,32 +374,29 @@ class MyGame(arcade.Window):
             )
 
     def on_update(self, delta_time):
-        if self.paused:
-            for emitter in self.explosion_emitters[:]:
-                emitter.update(delta_time)
-                if emitter.can_reap():
+        if not self.paused and not self.game_over:
+            self.game_time += delta_time
+        
+        for emitter in self.explosion_emitters[:]:
+            try:
+                emitter.update()
+            except:
+                pass
+            if emitter.can_reap():
+                if emitter in self.explosion_emitters:
                     self.explosion_emitters.remove(emitter)
+        
+        if self.paused:
             self.player.change_x = 0
             return
 
-        self.game_time += delta_time
-
         if self.game_over:
-            for emitter in self.explosion_emitters[:]:
-                emitter.update(delta_time)
-                if emitter.can_reap():
-                    self.explosion_emitters.remove(emitter)
             return
         
         if self.mouse_exploding:
-            for emitter in self.explosion_emitters[:]:
-                emitter.update(delta_time)
-                if emitter.can_reap():
-                    self.explosion_emitters.remove(emitter)
-            
-            if not self.explosion_emitters and (self.game_time - self.explosion_start_time) > 0.3:
-                self.respawn_player()
-            return
+            if (self.game_time - self.explosion_start_time) >= 0.2:
+                self.respawn_player()  
+
 
         self.player.change_x = 0
         if self.left_pressed:
