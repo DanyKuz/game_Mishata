@@ -123,7 +123,7 @@ class MyGame(arcade.Window):
         try:
             self.pause_button_sprite = arcade.Sprite(PAUSE_BUTTON_PATH, scale=0.04)
             self.pause_button_sprite.center_x = SCREEN_WIDTH // 2
-            self.pause_button_sprite.center_y = SCREEN_HEIGHT - 50  # Сверху, с отступом
+            self.pause_button_sprite.center_y = SCREEN_HEIGHT - 50  
             self.pause_button_list.append(self.pause_button_sprite)
             print(f"Иконка паузы загружена: {PAUSE_BUTTON_PATH}")
         except Exception as e:
