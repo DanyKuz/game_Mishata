@@ -1,6 +1,7 @@
 import arcade
 import json
 import os
+import sys
 import random
 from arcade.particles import FadeParticle, Emitter, EmitBurst
 
@@ -12,11 +13,21 @@ GRAVITY = 1.0
 JUMP_SPEED = 21
 CAT_SPEED = 2
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 PLAYER_SCALING = 0.06
 COIN_SCALING = 0.3
 CAT_SCALING = 0.08
-PAUSE_SIGN_PATH = "data/pauseboard.png"
-PAUSE_BUTTON_PATH = "data/pause.png" 
+PAUSE_SIGN_PATH = resource_path("data/pauseboard.png")
+PAUSE_BUTTON_PATH = resource_path("data/pause.png") 
 MUSIC_VOLUME = 0.3
 
 
@@ -82,7 +93,7 @@ class MyGame(arcade.Window):
         self.load_and_play_music()
 
     def load_and_play_music(self):
-        music_path = "data/music.wav"
+        music_path = resource_path("data/music.wav")
         if os.path.exists(music_path):
             try:
                 self.music = arcade.Sound(music_path)
@@ -100,7 +111,7 @@ class MyGame(arcade.Window):
         self.coin_list = arcade.SpriteList()
         self.cat_list = arcade.SpriteList()
 
-        map_name = "data/titlemap2/titlemap4.tmx"
+        map_name = resource_path("data/titlemap2/titlemap4.tmx")
         tile_map = arcade.load_tilemap(map_name, scaling=0.5)
 
         self.wall_list = tile_map.sprite_lists.get("Platform", arcade.SpriteList())
@@ -113,8 +124,8 @@ class MyGame(arcade.Window):
         enemy_layer = tile_map.sprite_lists.get("Enemy", arcade.SpriteList())
         for enemy_sprite in enemy_layer:
             try:
-                cat = arcade.Sprite("data/cat.png", scale=CAT_SCALING)
-                self.cat_texture_right = arcade.load_texture("data/cat.png")
+                cat = arcade.Sprite(resource_path("data/cat.png"), scale=CAT_SCALING)
+                self.cat_texture_right = arcade.load_texture(resource_path("data/cat.png"))
                 self.cat_texture_left = self.cat_texture_right.flip_left_right()
             except FileNotFoundError:
                 print("Файл data/cat.png не найден. Используем замену.")
@@ -137,7 +148,7 @@ class MyGame(arcade.Window):
         self.total_coins = len(self.coin_list)
 
         try:
-            texture_right = arcade.load_texture("data/mouse.png")
+            texture_right = arcade.load_texture(resource_path("data/mouse.png"))
         except FileNotFoundError:
             print("Файл data/mouse.png не найден. Используем замену.")
             texture_right = arcade.load_texture(":resources:images/animated_characters/female_person/femalePerson_idle.png")
@@ -222,7 +233,7 @@ class MyGame(arcade.Window):
 
 
     def load_best_time(self):
-        PROGRESS_FILE = "progress.json"
+        PROGRESS_FILE = resource_path("progress.json")
         self.best_time = None
         if os.path.exists(PROGRESS_FILE):
             try:
@@ -233,7 +244,7 @@ class MyGame(arcade.Window):
                 pass
 
     def save_progress(self):
-        PROGRESS_FILE = "progress.json"
+        PROGRESS_FILE = resource_path("progress.json")
         progress = {"level_1_unlocked": True, "level_2_unlocked": True, "level_3_unlocked": False}
         
         if os.path.exists(PROGRESS_FILE):

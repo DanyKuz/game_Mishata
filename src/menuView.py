@@ -12,8 +12,19 @@ MAIN_MENU = "main"
 RULES = "rules"
 CONTROLS = "controls"
 LEVELS = "levels"
-PROGRESS_FILE = "progress.json"
 
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+PROGRESS_FILE = resource_path("progress.json")
 
 def save_progress(data):
     with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
@@ -48,7 +59,7 @@ class MenuView(arcade.View):
         super().__init__()
         self.current_state = MAIN_MENU
         try:
-            self.background_texture = arcade.load_texture("data/background.png")
+            self.background_texture = arcade.load_texture(resource_path("data/background.png"))
         except FileNotFoundError:
             self.background_texture = None
             print("Фон не найден. Используем чёрный фон.")
@@ -139,19 +150,22 @@ class MenuView(arcade.View):
         if self.current_state == LEVELS:
             progress = load_progress()
             level_y = SCREEN_HEIGHT // 2 + 30
+            p1 = resource_path("src/lvl1.py")
+            p2 = resource_path("src/lvl2.py")
+            p3 = resource_path("src/lvl2.py")
 
             if abs(x - (SCREEN_WIDTH // 2 - 200)) < 100 and abs(y - level_y) < 20:
-                subprocess.Popen([sys.executable, "src/lvl1.py"])
+                subprocess.Popen([sys.executable, p1])
                 return
 
             if (progress.get("level_2_unlocked", False) and
                 abs(x - (SCREEN_WIDTH // 2)) < 100 and abs(y - level_y) < 20):
-                subprocess.Popen([sys.executable, "src/lvl2.py"])
+                subprocess.Popen([sys.executable, p2])
                 return
 
             if (progress.get("level_3_unlocked", False) and
                 abs(x - (SCREEN_WIDTH // 2 + 200)) < 100 and abs(y - level_y) < 20):
-                subprocess.Popen([sys.executable, "src/lvl3.py"])
+                subprocess.Popen([sys.executable, p3])
                 return
 
             if 400 <= x <= 500 and 200 <= y <= 300:
