@@ -141,7 +141,6 @@ class MyGame(arcade.Window):
         self.player.center_y = 200
         self.player_list.append(self.player)
         
-
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
             platforms=self.walls,
@@ -170,7 +169,6 @@ class MyGame(arcade.Window):
         except Exception as e:
             print(f"Не удалось загрузить иконку паузы: {e}")
             self.pause_button_sprite = None
-
 
         self.score = 0
         self.game_over = False

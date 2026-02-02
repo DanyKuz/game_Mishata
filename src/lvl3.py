@@ -137,7 +137,6 @@ class MyGame(arcade.Window):
             print(f"Не удалось загрузить иконку паузы: {e}")
             self.pause_button_sprite = None
 
-
         self.score = 0
         self.game_over = False
         self.paused = False
@@ -372,7 +371,6 @@ class MyGame(arcade.Window):
                     self.right_pressed = False
                     self.player.change_x = 0
                 print(f"Пауза {'включена' if self.paused else 'выключена'} через иконку")
-
 
     def close(self):
         if self.music_player and self.music:
