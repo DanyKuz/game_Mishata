@@ -1,6 +1,8 @@
 import arcade
 import json 
 import os 
+import random
+from arcade.particles import FadeParticle, Emitter, EmitBurst
 
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 820
@@ -16,6 +18,12 @@ PAUSE_BUTTON_PATH = "data/pause.png"
 MUSIC_VOLUME = 0.3
 
 
+def mouse_explosion_mutator(p):
+    p.change_y -= 0.15  
+    p.change_x *= 0.95
+    p.change_y *= 0.96
+
+
 class MyGame(arcade.Window):
     def __init__(self, width, height, title):
         super().__init__(width, height, title)
@@ -26,6 +34,7 @@ class MyGame(arcade.Window):
         self.wall_list = None
         self.death_list = None
 
+        self.spawn_point = (100, 200)
         self.player = None
         self.physics_engine = None
 
@@ -49,6 +58,12 @@ class MyGame(arcade.Window):
 
         self.music = None
         self.music_player = None
+        
+        self.explosion_emitters = []  
+        self.mouse_exploding = False  
+        self.explosion_start_time = 0.0
+        
+        self.mouse_spark_textures = []
         
         self.load_and_play_music()
 
@@ -100,6 +115,8 @@ class MyGame(arcade.Window):
         self.player.center_x = 100
         self.player.center_y = 200
         self.player_list.append(self.player)
+        
+        self.spawn_point = (100, 200)
 
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
@@ -137,8 +154,30 @@ class MyGame(arcade.Window):
         self.left_pressed = False
         self.right_pressed = False
         self.game_time = 0.0
+        
+        self.mouse_exploding = False
+        self.explosion_emitters.clear()
+
+        self.mouse_spark_textures = [
+            arcade.make_soft_circle_texture(10, arcade.color.SAND),
+            arcade.make_soft_circle_texture(10, arcade.color.TAUPE),
+            arcade.make_soft_circle_texture(10, arcade.color.DARK_BROWN),
+            arcade.make_soft_circle_texture(12, arcade.color.LIGHT_BROWN),
+            arcade.make_soft_circle_texture(8, arcade.color.GRAY),
+        ]
 
         self.load_best_time()
+
+    def respawn_player(self):
+        self.player.center_x, self.player.center_y = self.spawn_point
+        self.player.change_x = 0
+        self.player.change_y = 0
+        self.player.visible = True
+        self.mouse_exploding = False
+        
+        for emitter in self.explosion_emitters:
+            emitter.close()
+        self.explosion_emitters.clear()
 
     def load_best_time(self):
         PROGRESS_FILE = "progress.json"
@@ -189,13 +228,59 @@ class MyGame(arcade.Window):
                 self.player.texture = self.player_texture_left
                 self.facing_left = True
 
+    def make_mouse_explosion(self, x, y):
+        emitter1 = Emitter(
+            center_xy=(x, y),
+            emit_controller=EmitBurst(60),
+            particle_factory=lambda e: FadeParticle(
+                filename_or_texture=random.choice(self.mouse_spark_textures),
+                change_xy=arcade.math.rand_in_circle((0.0, 0.0), 12.0),
+                lifetime=random.uniform(0.6, 1.3),
+                start_alpha=255, end_alpha=0,
+                scale=random.uniform(0.4, 0.9),
+                mutation_callback=mouse_explosion_mutator,
+            ),
+        )
+        
+        emitter2 = Emitter(
+            center_xy=(x, y),
+            emit_controller=EmitBurst(40),
+            particle_factory=lambda e: FadeParticle(
+                filename_or_texture=random.choice(self.mouse_spark_textures[:3]),
+                change_xy=arcade.math.rand_in_circle((0.0, 0.0), 8.0),
+                lifetime=random.uniform(0.4, 0.9),
+                start_alpha=220, end_alpha=0,
+                scale=random.uniform(0.3, 0.6),
+                mutation_callback=mouse_explosion_mutator,
+            ),
+        )
+        
+        return [emitter1, emitter2]
+    
+    def trigger_mouse_explosion(self):
+        if self.mouse_exploding:
+            return
+            
+        self.mouse_exploding = True
+        self.explosion_start_time = self.game_time
+        self.player.visible = False  
+        
+
+        emitters = self.make_mouse_explosion(self.player.center_x, self.player.center_y)
+        self.explosion_emitters.extend(emitters)
+
     def on_draw(self):
         self.clear()
 
         self.wall_list.draw()
         self.coin_list.draw()
         self.death_list.draw()
-        self.player_list.draw()
+        
+        for emitter in self.explosion_emitters:
+            emitter.draw()
+            
+        if not self.mouse_exploding:
+            self.player_list.draw()
 
         arcade.draw_text(f"Сыр: {self.score}/{self.total_coins}", 10, SCREEN_HEIGHT - 30,
                          arcade.color.WHITE, 24, bold=True)
@@ -285,14 +370,32 @@ class MyGame(arcade.Window):
             )
 
     def on_update(self, delta_time):
-        if self.game_over:
-            return
-
         if self.paused:
+            for emitter in self.explosion_emitters[:]:
+                emitter.update(delta_time)
+                if emitter.can_reap():
+                    self.explosion_emitters.remove(emitter)
             self.player.change_x = 0
             return
 
         self.game_time += delta_time
+        
+        if self.game_over:
+            for emitter in self.explosion_emitters[:]:
+                emitter.update(delta_time)
+                if emitter.can_reap():
+                    self.explosion_emitters.remove(emitter)
+            return
+        
+        if self.mouse_exploding:
+            for emitter in self.explosion_emitters[:]:
+                emitter.update(delta_time)
+                if emitter.can_reap():
+                    self.explosion_emitters.remove(emitter)
+            
+            if not self.explosion_emitters and (self.game_time - self.explosion_start_time) > 0.3:
+                self.respawn_player()
+            return
 
         self.player.change_x = 0
         if self.left_pressed:
@@ -313,9 +416,9 @@ class MyGame(arcade.Window):
             self.save_progress()
 
         death_hit_list = arcade.check_for_collision_with_list(self.player, self.death_list)
-        if death_hit_list:
-            self.setup()
-
+        if death_hit_list and not self.mouse_exploding:
+            self.trigger_mouse_explosion()
+            
     def on_key_press(self, key, modifiers):
         if key == arcade.key.P:
             self.paused = not self.paused
