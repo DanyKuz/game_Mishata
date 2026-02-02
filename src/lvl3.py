@@ -130,7 +130,7 @@ class MyGame(arcade.Window):
         try:
             self.pause_button_sprite = arcade.Sprite(PAUSE_BUTTON_PATH, scale=0.04)
             self.pause_button_sprite.center_x = SCREEN_WIDTH // 2
-            self.pause_button_sprite.center_y = SCREEN_HEIGHT - 50  # Сверху, с отступом
+            self.pause_button_sprite.center_y = SCREEN_HEIGHT - 50  
             self.pause_button_list.append(self.pause_button_sprite)
             print(f"Иконка паузы загружена: {PAUSE_BUTTON_PATH}")
         except Exception as e:
@@ -225,12 +225,22 @@ class MyGame(arcade.Window):
             if self.pause_sign_sprite:
                 self.pause_sign_list.draw()
                 arcade.draw_text(
-                    "ПАУЗА\n\n\n"
+                    "ПАУЗА",
+                    SCREEN_WIDTH // 2,
+                    SCREEN_HEIGHT // 2 + 100,  
+                    arcade.color.BLACK_BEAN,  
+                    48,
+                    anchor_x="center",
+                    anchor_y="center",
+                    bold=True
+                )
+                
+                arcade.draw_text(
                     "Нажмите 'P' чтобы продолжить\n"
                     "'R' для перезапуска\n"
                     "'Esc' или 'Q' для выхода",
                     SCREEN_WIDTH // 2,
-                    SCREEN_HEIGHT // 2 + 40,
+                    SCREEN_HEIGHT // 2 - 20,
                     arcade.color.BLACK,
                     24,
                     anchor_x="center",
@@ -241,13 +251,23 @@ class MyGame(arcade.Window):
                 )
             else:
                 arcade.draw_text(
-                    "ПАУЗА\n\n"
+                    "ПАУЗА",
+                    SCREEN_WIDTH // 2,
+                    SCREEN_HEIGHT // 2 + 100,  
+                    arcade.color.BLACK_BEAN,  
+                    48,
+                    anchor_x="center",
+                    anchor_y="center",
+                    bold=True
+                )
+                
+                arcade.draw_text(
                     "Нажмите 'P' чтобы продолжить\n"
                     "'R' для перезапуска\n"
                     "'Esc' или 'Q' для выхода",
                     SCREEN_WIDTH // 2,
-                    SCREEN_HEIGHT // 2,
-                    arcade.color.WHITE,
+                    SCREEN_HEIGHT // 2 - 20,
+                    arcade.color.BLACK,
                     36,
                     anchor_x="center",
                     anchor_y="center",

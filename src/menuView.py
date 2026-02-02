@@ -67,7 +67,7 @@ class MenuView(arcade.View):
 
         if self.current_state == MAIN_MENU:
             arcade.draw_text("Мышата", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 300,
-                            arcade.color.WHITE, font_size=48, anchor_x="center", bold=True)
+                            arcade.color.BLACK_BEAN, font_size=48, anchor_x="center", bold=True)
             self.draw_menu_item("К уровням", 0)
             self.draw_menu_item("Правила", 1)
             self.draw_menu_item("Управление", 2)
@@ -112,19 +112,19 @@ class MenuView(arcade.View):
 
     def draw_header(self, text):
         arcade.draw_text(text, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 300,
-                        arcade.color.WHITE, font_size=36, anchor_x="center", bold=True)
+                        arcade.color.BLACK_BEAN, font_size=36, anchor_x="center", bold=True)
 
     def draw_menu_item(self, text, index):
         y = SCREEN_HEIGHT - 380 - index * 50
         arcade.draw_text(text, SCREEN_WIDTH // 2, y,
-                        arcade.color.LIGHT_GRAY, font_size=24, anchor_x="center")
+                        arcade.color.BLACK, font_size=24, anchor_x="center")
 
     def draw_multiline_text(self, text):
         arcade.draw_text(
             text,
             x=SCREEN_WIDTH // 2,
             y=SCREEN_HEIGHT // 2 + 65,
-            color=arcade.color.WHITE,
+            color=arcade.color.BLACK,
             font_size=18,
             anchor_x="center",
             width=600,

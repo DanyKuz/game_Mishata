@@ -269,12 +269,22 @@ class MyGame(arcade.Window):
             if self.pause_sign_sprite:
                 self.pause_sign_list.draw()
                 arcade.draw_text(
-                    "ПАУЗА\n\n\n"
+                    "ПАУЗА",
+                    SCREEN_WIDTH // 2,
+                    SCREEN_HEIGHT // 2 + 100,  
+                    arcade.color.BLACK_BEAN,  
+                    48,
+                    anchor_x="center",
+                    anchor_y="center",
+                    bold=True
+                )
+                
+                arcade.draw_text(
                     "Нажмите 'P' чтобы продолжить\n"
                     "'R' для перезапуска\n"
                     "'Esc' или 'Q' для выхода",
                     SCREEN_WIDTH // 2,
-                    SCREEN_HEIGHT // 2 + 40,
+                    SCREEN_HEIGHT // 2 - 20,
                     arcade.color.BLACK,
                     24,
                     anchor_x="center",
@@ -285,13 +295,23 @@ class MyGame(arcade.Window):
                 )
             else:
                 arcade.draw_text(
-                    "ПАУЗА\n\n"
+                    "ПАУЗА",
+                    SCREEN_WIDTH // 2,
+                    SCREEN_HEIGHT // 2 + 100,  
+                    arcade.color.BLACK_BEAN,  
+                    48,
+                    anchor_x="center",
+                    anchor_y="center",
+                    bold=True
+                )
+                
+                arcade.draw_text(
                     "Нажмите 'P' чтобы продолжить\n"
                     "'R' для перезапуска\n"
                     "'Esc' или 'Q' для выхода",
                     SCREEN_WIDTH // 2,
-                    SCREEN_HEIGHT // 2,
-                    arcade.color.WHITE,
+                    SCREEN_HEIGHT // 2 - 20,
+                    arcade.color.BLACK,
                     36,
                     anchor_x="center",
                     anchor_y="center",
